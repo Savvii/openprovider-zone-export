@@ -16,27 +16,46 @@ class GetAllTool
     public array $config;
     public int $start = 0;
     public int $stop = 999999999;
+    public string $outputPath = __DIR__ . '/output';
 
     public function __construct() {
         require_once __DIR__ . "/config.php";
         $this->config = $config;
         $this->api = new OP_API ($this->config['op_api_url']);
         $this->api->setDebug($this->config['debug']);
+        if (!is_dir($this->outputPath)) {
+            mkdir($this->outputPath, 0700, true);
+        }
     }
 
     public function run(): int
     {
         $list = $this->getDomainList();
+        $builder = new AlignedBuilder();
+        $written = 0;
+
         foreach($list as $domain) {
             $domainDot = sprintf("%s.", $domain);
+            $outputFile = sprintf("%s/%s", $this->outputPath, $domainDot);
+            if (file_exists($outputFile)) {
+                continue;
+            }
             $records = $this->getDnsRecords($domain);
             $zone = new Zone($domainDot);
+            // $zone->setDefaultTtl();
             print_r($records);
+            $defaultTtl = 60;
+            foreach($records as $record) {
+                $defaultTtl = max($defaultTtl, $record['ttl']);
+            }
+            $zone->setDefaultTtl($defaultTtl);
             foreach($records as $record) {
                 $rr = new ResourceRecord();
                 $rr->setName('@');
                 $rr->setClass(Classes::INTERNET);
-                $rr->setTtl($record['ttl']);
+                if ($record['ttl'] != $defaultTtl) {
+                    $rr->setTtl($record['ttl']);
+                }
                 $rdata = Factory::newRdataFromName($record['type']);
                 switch ($record['type']) {
                     case 'MX':
@@ -49,9 +68,14 @@ class GetAllTool
                 $rr->setRdata($rdata);
                 $zone->addResourceRecord($rr);
             }
-            $builder = new AlignedBuilder();
-            echo $builder->build($zone);
+            $zoneText = $builder->build($zone);
+            if ($this->config['debug']) {
+                echo "Zone:\n" . print_r($zoneText, true) . "\n";
+            }
+            file_put_contents($outputFile, $zoneText);
+            $written++;
         }
+        printf("Received %d domains, written %d zones\n", count($list), $written);
         return 0;
     }
 
@@ -89,7 +113,7 @@ class GetAllTool
             $total = $listReply->getValue()['total'];
             $offset += $limit;
         }
-        printf("%d total domains", $total);
+        printf("Received %s of %d total domains\n", count($result), $total);
         return $result;
     }
 
@@ -104,13 +128,14 @@ class GetAllTool
         ]);
         $recordRequest->setArgs( [
             'name' => $domain,
-            // 'offset' => 0,
-            // 'limit' => 499,
             'orderBy' => 'name',
         ]);
         $recordReply = $this->api->process($recordRequest);
         if (0 != $recordReply->getFaultCode()) {
             throw new Exception($recordReply->getFaultString(), $recordReply->getFaultCode());
+        }
+        if ($this->config['debug']) {
+            echo "Value: " . print_r($recordReply->getValue(), true) . "\n";
         }
         return $recordReply->getValue()['results'];
     }
