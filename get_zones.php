@@ -51,7 +51,6 @@ class GetAllTool
             $zone->setDefaultTtl($defaultTtl);
             foreach($records as $record) {
                 $recordName = $this->zoneValue($domain, $record['name']);
-                echo "recordName: " . $recordName ."\n";
                 $rr = new ResourceRecord();
                 $rr->setName($recordName);
                 $rr->setClass(Classes::INTERNET);
