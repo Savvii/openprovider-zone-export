@@ -1,5 +1,8 @@
 <?php
 
+    // Code below is from: https://doc.openprovider.eu/Example_Class_API_PHP
+    // Changes: Fix for PHP 8
+
    class OP_API_Exception extends Exception
    {
    }
@@ -65,12 +68,15 @@
                return false;
            }
 
-           $element = $dom->createElement('element')
-               ->appendChild($textNode);
+           //$element = $dom->createElement('element')
+           //    ->appendChild($textNode);
+           $element = $dom->createElement('element');
 
            if (!$element) {
                return false;
            }
+
+           $element->appendChild($textNode);
 
            @$dom->appendChild($element);
 
@@ -80,8 +86,12 @@
        }
        static function encode ($str)
        {
-           $ret = @htmlentities($str, null, OP_API::$encoding);
+           if (is_null($str)) {
+               return '';
+           }
+           $ret = @htmlentities($str, 0, OP_API::$encoding);
            // Some tables have data stored in two encodings
+           //if ( !is_null($str) && strlen($str) && (is_null($ret) || !strlen($ret)) ) {
            if (strlen($str) && !strlen($ret)) {
                error_log('ISO charset date = ' . date('d.m.Y H:i:s') . ',STR = ' . $str);
                $str = iconv('ISO-8859-1', 'UTF-8', $str);
