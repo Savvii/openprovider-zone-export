@@ -1,0 +1,8 @@
+<?php
+
+$config = [
+    'op_api_url'  => 'https://api.openprovider.eu',
+    'op_debug'    => false,
+    'op_username' => '___FILL_ME___',
+    'op_password' => '___FILL_ME___'
+];
