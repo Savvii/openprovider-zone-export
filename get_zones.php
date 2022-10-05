@@ -50,8 +50,10 @@ class GetAllTool
             }
             $zone->setDefaultTtl($defaultTtl);
             foreach($records as $record) {
+                $recordName = $this->zoneValue($domain, $record['name']);
+                echo "recordName: " . $recordName ."\n";
                 $rr = new ResourceRecord();
-                $rr->setName('@');
+                $rr->setName($recordName);
                 $rr->setClass(Classes::INTERNET);
                 if ($record['ttl'] != $defaultTtl) {
                     $rr->setTtl($record['ttl']);
@@ -60,7 +62,13 @@ class GetAllTool
                 switch ($record['type']) {
                     case 'MX':
                         $rdata->setPreference($record['prio']);
-                        $rdata->setExchange($record['value']);
+                        $rdata->setExchange($this->zoneValue($domain,$record['value']));
+                        break;
+                    case 'CNAME':
+                    case 'NS':
+                    case 'PTR':
+                    case 'DNAME':
+                        $rdata->setTarget($this->zoneValue($domain, $record['value']));
                         break;
                     default:
                         $rdata->fromText($record['value']);
@@ -117,7 +125,7 @@ class GetAllTool
         return $result;
     }
 
-    public function getDnsRecords($domain): ?array
+    public function getDnsRecords(string $domain): ?array
     {
         printf("Requesting %s\n", $domain);
         $recordRequest = new OP_Request;
@@ -138,6 +146,18 @@ class GetAllTool
             echo "Value: " . print_r($recordReply->getValue(), true) . "\n";
         }
         return $recordReply->getValue()['results'];
+    }
+
+    private function zoneValue(string $domain, string $value): string {
+        if ($value == $domain) {
+            $result = '@';
+        } elseif (preg_match('/^([\w\-\.]+)\.'.preg_quote($domain,'/').'$/', $value, $matches)) {
+            $result = $matches[1];
+        }
+        else {
+            $result = $value . '.';
+        }
+        return $result;
     }
 }
 
