@@ -12,6 +12,7 @@ These are written to `output/zones` as Bind zone files.
 - PHP 8.0 or greater. Can be installed on MacOS using [HomeBrew](https://brew.sh/)
 
 # Install
+## Clone project & Composer Install
 ```
 git clone git@github.com:Savvii/openprovider-csv2zone.git
 cd openprovider-csv2zone
@@ -19,7 +20,10 @@ composer install
 cp config.php.example config.php
 ```
 
-Update `config.php`
+## Update Configuration
+Edit `config.php`
+- Configure `op_username` with your OpenProvider username.
+- Configure `op_password` with your OpenProvider password.
 
 Optional: Put a manual list of domains in `input/domainlist.txt`, each domain on a separate line.
 
