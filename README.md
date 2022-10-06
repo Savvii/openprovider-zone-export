@@ -27,3 +27,4 @@ Optional: Put a manual list of domains in `input/domainlist.txt`, each domain on
 ```
 ./get_zones.php
 ```
+The zones will be written to `output/zones`.
