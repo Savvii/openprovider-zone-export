@@ -2,6 +2,8 @@
 
 $config = [
     'debug'       => false,
+    'input_path'  => __DIR__ . '/input',
+    'output_path' => __DIR__ . '/output',
     'op_api_url'  => 'https://api.openprovider.eu',
     'op_username' => '___FILL_ME___',
     'op_password' => '___FILL_ME___'

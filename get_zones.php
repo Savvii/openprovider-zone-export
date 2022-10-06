@@ -16,34 +16,53 @@ class GetAllTool
     public array $config;
     public int $start = 0;
     public int $stop = 999999999;
-    public string $outputPath = __DIR__ . '/output';
 
     public function __construct() {
         require_once __DIR__ . "/config.php";
         $this->config = $config;
         $this->api = new OP_API ($this->config['op_api_url']);
         $this->api->setDebug($this->config['debug']);
-        if (!is_dir($this->outputPath)) {
-            mkdir($this->outputPath, 0700, true);
+        if (!is_dir($this->config['output_path'].'/zones')) {
+            mkdir($this->config['output_path'].'/zones', 0700, true);
         }
     }
 
     public function run(): int
     {
-        $list = $this->getDomainList();
+        $list = [];
+        $domainListFile = $this->config['input_path'].'/domainlist.txt';
+        if (file_exists($domainListFile)) {
+            $handle = fopen($domainListFile, "r");
+            if ($handle) {
+                while (($line = fgets($handle)) !== false) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $list[] = $line;
+                    }
+                }
+                fclose($handle);
+            }
+            printf("Read %d domains from '%s'\n", count($list), $domainListFile);
+        }
+        $list += $this->getDomainList();
+        $list = array_unique($list);
+        sort($list);
+
         $builder = new AlignedBuilder();
         $written = 0;
 
         foreach($list as $domain) {
             $domainDot = sprintf("%s.", $domain);
-            $outputFile = sprintf("%s/%s", $this->outputPath, $domainDot);
+            $outputFile = sprintf("%s/%s", $this->config['output_path'].'/zones', $domainDot);
             if (file_exists($outputFile)) {
                 continue;
             }
             $records = $this->getDnsRecords($domain);
+            if (empty($records)) {
+                printf("WARNING: Received no records for '%s'", $domain);
+                continue;
+            }
             $zone = new Zone($domainDot);
-            // $zone->setDefaultTtl();
-            print_r($records);
             $defaultTtl = 60;
             foreach($records as $record) {
                 $defaultTtl = max($defaultTtl, $record['ttl']);
@@ -82,7 +101,7 @@ class GetAllTool
             file_put_contents($outputFile, $zoneText);
             $written++;
         }
-        printf("Received %d domains, written %d zones\n", count($list), $written);
+        printf("Processed %d domains, written %d zones\n", count($list), $written);
         return 0;
     }
 
@@ -93,7 +112,7 @@ class GetAllTool
         $offset = $this->start;
         $limit = min(50, $this->stop);
         while ((is_null($total) or $offset < $total) and $offset < $this->stop) {
-            printf("Listing domains, offset %d limit %d\n", $offset, $limit);
+            printf("Calling API to get domain list, offset %d limit %d\n", $offset, $limit);
             $listRequest = new OP_Request;
             $listRequest->setAuth([
                 'username' => $this->config['op_username'],
@@ -115,7 +134,12 @@ class GetAllTool
             $listResults = $listReply->getValue()['results'];
             foreach($listResults as $listResult) {
                 $domain = sprintf("%s.%s", $listResult['domain']['name'], $listResult['domain']['extension']);
-                $result[] = $domain;
+                if (in_array($domain,$result)) {
+                    printf("WARNING: Duplicate domain '%s'\n", $domain);
+                } else {
+                    // printf("Domain '%s'\n", $domain);
+                    $result[] = $domain;
+                }
             }
             $total = $listReply->getValue()['total'];
             $offset += $limit;
@@ -149,12 +173,18 @@ class GetAllTool
 
     private function zoneValue(string $domain, string $value): string {
         if ($value == $domain) {
+            // Domain itself
             $result = '@';
         } elseif (preg_match('/^([\w\-\.]+)\.'.preg_quote($domain,'/').'$/', $value, $matches)) {
+            // Subdomain
             $result = $matches[1];
         }
-        else {
+        elseif (preg_match('/^[\w\.\-]+\.\w+$/', $value)) {
+            // External domain
             $result = $value . '.';
+        }
+        else {
+            throw new Exception(sprintf("Invalid value. Domain '%s', Value '%s'", $domain, $value));
         }
         return $result;
     }
