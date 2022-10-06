@@ -14,7 +14,7 @@ These are written to `output/zones` as Bind zone files.
 # Install
 ## Clone project & Composer Install
 ```
-git clone git@github.com:Savvii/openprovider-csv2zone.git
+git clone git@github.com:Savvii/openprovider-zone-export.git
 cd openprovider-csv2zone
 composer install
 cp config.php.example config.php
