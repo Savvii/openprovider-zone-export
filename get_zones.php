@@ -17,7 +17,8 @@ class GetAllTool
     public int $start = 0;
     public int $stop = 999999999;
 
-    public function __construct() {
+    public function __construct()
+    {
         require_once __DIR__ . "/config.php";
         $this->config = $config;
         $this->api = new OP_API ($this->config['op_api_url']);
@@ -59,7 +60,7 @@ class GetAllTool
             }
             $records = $this->getDnsRecords($domain);
             if (empty($records)) {
-                printf("WARNING: Received no records for '%s'", $domain);
+                printf("WARNING: Received no records from API for '%s'\n", $domain);
                 continue;
             }
             $zone = new Zone($domainDot);
@@ -135,7 +136,7 @@ class GetAllTool
             foreach($listResults as $listResult) {
                 $domain = sprintf("%s.%s", $listResult['domain']['name'], $listResult['domain']['extension']);
                 if (in_array($domain,$result)) {
-                    printf("WARNING: Duplicate domain '%s'\n", $domain);
+                    printf("WARNING: Duplicate domain from API '%s'\n", $domain);
                 } else {
                     // printf("Domain '%s'\n", $domain);
                     $result[] = $domain;
@@ -150,7 +151,7 @@ class GetAllTool
 
     public function getDnsRecords(string $domain): ?array
     {
-        printf("Requesting %s\n", $domain);
+        printf("Calling API to requesting DNS records for '%s'\n", $domain);
         $recordRequest = new OP_Request;
         $recordRequest->setCommand('searchZoneRecordDnsRequest');
         $recordRequest->setAuth( [
@@ -171,7 +172,8 @@ class GetAllTool
         return $recordReply->getValue()['results'];
     }
 
-    private function zoneValue(string $domain, string $value): string {
+    private function zoneValue(string $domain, string $value): string
+    {
         if ($value == $domain) {
             // Domain itself
             $result = '@';
