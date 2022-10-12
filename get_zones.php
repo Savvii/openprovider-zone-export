@@ -16,6 +16,7 @@ class GetAllTool
     public array $config;
     public int $start = 0;
     public int $stop = 999999999;
+    public int $internalNsGroupId = 1;
 
     public function __construct()
     {
@@ -31,6 +32,7 @@ class GetAllTool
     public function run(): int
     {
         $list = [];
+        $customNameServers = [];
         $domainListFile = $this->config['input_path'].'/domainlist.txt';
         if (file_exists($domainListFile)) {
             $handle = fopen($domainListFile, "r");
@@ -45,7 +47,7 @@ class GetAllTool
             }
             printf("Read %d domains from '%s'\n", count($list), $domainListFile);
         }
-        $list += $this->getDomainList();
+        $list += $this->getApiDomainList();
         $list = array_unique($list);
         sort($list);
 
@@ -60,7 +62,17 @@ class GetAllTool
             }
             $records = $this->getDnsRecords($domain);
             if (empty($records)) {
-                printf("WARNING: Received no records from API for '%s'\n", $domain);
+                $domainInfo = $this->getDomainInfo($domain);
+                if ($domainInfo['nsgroupId'] == $this->internalNsGroupId) {
+                    # OpenProvider nameservers
+                    printf("WARNING: Received no records from API for '%s'\n", $domain);
+                } else {
+                    # External nameservers
+                    if (empty($domainInfo['nameServers'])) {
+                        printf("WARNING: Received no nameservers from API for '%s'\n", $domain);
+                    }
+                    $customNameServers[$domain] = $domainInfo['nameServers'];
+                }
                 continue;
             }
             $zone = new Zone($domainDot);
@@ -80,6 +92,7 @@ class GetAllTool
                 $rdata = Factory::newRdataFromName($record['type']);
                 switch ($record['type']) {
                     case 'MX':
+                        /** @var \Badcow\DNS\Rdata\MX $rdata */
                         $rdata->setPreference($record['prio']);
                         $rdata->setExchange($this->zoneValue($domain,$record['value']));
                         break;
@@ -87,7 +100,16 @@ class GetAllTool
                     case 'NS':
                     case 'PTR':
                     case 'DNAME':
+                        /** @var \Badcow\DNS\Rdata\CNAME $rdata */
                         $rdata->setTarget($this->zoneValue($domain, $record['value']));
+                        break;
+                    case 'SRV':
+                        /** @var \Badcow\DNS\Rdata\SRV $rdata */
+                        $value = explode(' ', $record['value']);
+                        $rdata->setPriority($record['prio']);
+                        $rdata->setWeight($value[0]);
+                        $rdata->setPort($value[1]);
+                        $rdata->setTarget($this->zoneValue($domain, $value[2]));
                         break;
                     default:
                         $rdata->fromText($record['value']);
@@ -103,15 +125,21 @@ class GetAllTool
             $written++;
         }
         printf("Processed %d domains, written %d zones\n", count($list), $written);
+
+        $customFile = $this->config['output_path'].'/custom_nameservers.json';
+        file_put_contents($customFile, json_encode($customNameServers, JSON_PRETTY_PRINT));
+        printf("Written %d records to %s\n", count($customNameServers), $customFile);
+
         return 0;
     }
 
-    public function getDomainList(): array
+    public function getApiDomainList(): array
     {
         $result = [];
         $total = null;
         $offset = $this->start;
         $limit = min(50, $this->stop);
+
         while ((is_null($total) or $offset < $total) and $offset < $this->stop) {
             printf("Calling API to get domain list, offset %d limit %d\n", $offset, $limit);
             $listRequest = new OP_Request;
@@ -138,7 +166,6 @@ class GetAllTool
                 if (in_array($domain,$result)) {
                     printf("WARNING: Duplicate domain from API '%s'\n", $domain);
                 } else {
-                    // printf("Domain '%s'\n", $domain);
                     $result[] = $domain;
                 }
             }
@@ -146,6 +173,10 @@ class GetAllTool
             $offset += $limit;
         }
         printf("Received %s of %d total domains\n", count($result), $total);
+
+        $apiDomainListFile = $this->config['output_path'].'/apidomainlist.txt';
+        file_put_contents($apiDomainListFile, implode("\n", $result), LOCK_EX);
+
         return $result;
     }
 
@@ -172,12 +203,38 @@ class GetAllTool
         return $recordReply->getValue()['results'];
     }
 
+    public function getDomainInfo(string $domain): ?array
+    {
+        printf("Calling API to requesting Domain info for '%s'\n", $domain);
+        $domainParts = explode(".", $domain);
+        $domainRequest = new OP_Request;
+        $domainRequest->setCommand('retrieveDomainRequest');
+        $domainRequest->setAuth( [
+            'username' => $this->config['op_username'],
+            'password' => $this->config['op_password']
+        ]);
+        $domainRequest->setArgs( [
+            'domain' => [
+                'name' => $domainParts[0],
+                'extension' => implode(".", array_slice($domainParts, 1))
+            ]
+        ]);
+        $domainReply = $this->api->process($domainRequest);
+        if (0 != $domainReply->getFaultCode()) {
+            throw new Exception($domainReply->getFaultString(), $domainReply->getFaultCode());
+        }
+        if ($this->config['debug']) {
+            echo "Value: " . print_r($domainReply->getValue(), true) . "\n";
+        }
+        return $domainReply->getValue();
+    }
+
     private function zoneValue(string $domain, string $value): string
     {
         if ($value == $domain) {
             // Domain itself
             $result = '@';
-        } elseif (preg_match('/^([\w\-\.]+)\.'.preg_quote($domain,'/').'$/', $value, $matches)) {
+        } elseif (preg_match('/^([\w\-\.\*]+)\.'.preg_quote($domain,'/').'$/', $value, $matches)) {
             // Subdomain
             $result = $matches[1];
         }

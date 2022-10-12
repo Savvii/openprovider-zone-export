@@ -1,5 +1,6 @@
 <?php
 
+    // Documentation: https://doc.openprovider.eu/
     // Code below is from: https://doc.openprovider.eu/Example_Class_API_PHP
     // Changes: Fix for PHP 8
 
