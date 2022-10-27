@@ -1,5 +1,13 @@
 {
+    "name": "savvii/openprovider-zone-export",
+    "type": "project",
+    "description": "Convert OpenProvider DNS records to Zone files",
+    "homepage": "https://github.com/Savvii/openprovider-zone-export",
+    "license": "MIT",
     "require": {
+        "php": ">=8.0",
+        "ext-gmp": "*",
+        "ext-dom": "*",
         "badcow/dns": "^4.2"
     }
 }
