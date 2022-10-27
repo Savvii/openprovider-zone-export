@@ -2,29 +2,30 @@
 
 // Documentation: https://doc.openprovider.eu/
 // Code below is from: https://doc.openprovider.eu/Example_Class_API_PHP
-// Changes: Fix for PHP 8
+// Changes: Fixes for PHP 8, type declarations
 
 class OP_API_Exception extends Exception
 {
 }
 class OP_API
 {
-    protected $url = null;
-    protected $error = null;
-    protected $timeout = null;
-    protected $debug = null;
+    protected ?string $url = null;
+    protected ?string $error = null;
+    protected ?int $timeout = null;
+    protected ?bool $debug = null;
     static public $encoding = 'UTF-8';
-    public function __construct ($url = null, $timeout = 1000)
+    public function __construct (?string $url = null, int $timeout = 1000)
     {
         $this->url = $url;
         $this->timeout = $timeout;
     }
-    public function setDebug ($v)
+    public function setDebug (bool $v): OP_API
     {
         $this->debug = $v;
         return $this;
     }
-    public function processRawReply (OP_Request $r) {
+    public function processRawReply (OP_Request $r): string
+    {
         if ($this->debug) {
             echo $r->getRaw() . "\n";
         }
@@ -38,7 +39,8 @@ class OP_API
         }
         return $str;
     }
-    public function process (OP_Request $r) {
+    public function process (OP_Request $r): OP_Reply
+    {
         if ($this->debug) {
             echo $r->getRaw() . "\n";
         }
@@ -58,7 +60,7 @@ class OP_API
     * @param $str string
     * @return boolean
     */
-    static function checkCreateXml($str)
+    static function checkCreateXml(string $str): bool
     {
         $dom = new DOMDocument;
         $dom->encoding = 'utf-8';
@@ -85,7 +87,7 @@ class OP_API
 
         return !empty($xml);
     }
-    static function encode ($str)
+    static function encode (?string $str): string
     {
         if (is_null($str)) {
             return '';
@@ -109,23 +111,23 @@ class OP_API
 
         if (!empty($str) && is_string($str) && !self::checkCreateXml($str)) {
             error_log('Exception convertPhpObjToDom date = ' . date('d.m.Y H:i:s') . ', STR = ' . $str);
-            $str = htmlentities($str, null, OP_API::$encoding);
+            $str = htmlentities($str, 0, OP_API::$encoding);
         }
         return $str;
     }
-    static function decode ($str)
+    static function decode (string $str): string
     {
         return $str;
     }
-    static function createRequest ($xmlStr = null)
+    static function createRequest (?string $xmlStr = null): OP_Request
     {
         return new OP_Request ($xmlStr);
     }
-    static function createReply ($xmlStr = null)
+    static function createReply (?string $xmlStr = null): OP_Reply
     {
         return new OP_Reply ($xmlStr);
     }
-    protected function _send ($str)
+    protected function _send (string $str): string
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->url);
@@ -148,8 +150,8 @@ class OP_API
             return $ret;
         }
     }
-    // convert SimpleXML to PhpObj
-    public static function convertXmlToPhpObj ($node)
+    // convert DOMNode to array|string|bool|null
+    public static function convertXmlToPhpObj (DOMNode $node): array|string|false|null
     {
         $ret = array();
 
@@ -181,7 +183,7 @@ class OP_API
         }
     }
     // parse array
-    protected static function parseArray ($node)
+    protected static function parseArray (DOMNode $node): array
     {
         $ret = array();
         foreach ($node->childNodes as $child) {
@@ -197,11 +199,10 @@ class OP_API
     * converts php-structure to DOM-object.
     *
     * @param array $arr php-structure
-    * @param SimpleXMLElement $node parent node where new element to attach
+    * @param DOMNode $node parent node where new element to attach
     * @param DOMDocument $dom DOMDocument object
-    * @return SimpleXMLElement
     */
-    public static function convertPhpObjToDom ($arr, $node, $dom)
+    public static function convertPhpObjToDom ($arr, DOMNode $node, DOMDocument $dom): void
     {
         if (is_array($arr)) {
             /**
@@ -235,51 +236,51 @@ class OP_API
 }
 class OP_Request
 {
-    protected $cmd = null;
-    protected $args = null;
-    protected $username = null;
-    protected $password = null;
-    protected $hash = null;
-    protected $token = null;
-    protected $ip = null;
-    protected $language = null;
-    protected $raw = null;
-    protected $dom = null;
-    protected $misc = null;
-    protected $filters = [];
-    public function __construct ($str = null)
+    protected ?string $cmd = null;
+    protected ?array $args = null;
+    protected ?string $username = null;
+    protected ?string $password = null;
+    protected ?string $hash = null;
+    protected ?string $token = null;
+    protected ?string $ip = null;
+    protected ?string $language = null;
+    protected ?string $raw = null;
+    protected ?DOMDocument $dom = null;
+    protected ?array $misc = null;
+    protected array $filters = [];
+    public function __construct (?string $str = null)
     {
         if ($str) {
             $this->setContent($str);
         }
     }
-    public function addFilter($filter)
+    public function addFilter($filter): void
     {
         $this->filters[] = $filter;
     }
-    public function setContent($str)
+    public function setContent(string $str): void
     {
         $this->raw = $str;
     }
-    protected function initDom()
+    protected function initDom(): void
     {
         if ($this->raw) {
             $this->dom = new DOMDocument;
             $this->dom->loadXML($this->raw, LIBXML_NOBLANKS);
         }
     }
-    public function getDom()
+    public function getDom(): DOMDocument
     {
         if (!$this->dom) {
             $this->initDom();
         }
         return $this->dom;
     }
-    protected function setDom($dom)
+    protected function setDom(DOMDocument $dom): void
     {
         $this->dom = $dom;
     }
-    public function parseContent()
+    public function parseContent(): void
     {
         $this->initDom();
         if (!$this->dom) {
@@ -298,11 +299,13 @@ class OP_Request
     *
     * @uses OP_Request::__construct()
     */
-    protected function _retrieveDataFromDom ($dom)
+    protected function _retrieveDataFromDom (DOMDocument $dom): void
     {
         $arr = OP_API::convertXmlToPhpObj($dom->documentElement);
-        list($dummy, $credentials) = each($arr);
-        list($this->cmd, $this->args) = each($arr);
+        $credentials = current($arr);
+        next($arr);
+        $this->cmd = key($arr);
+        $this->args = current($arr);
         $this->username = $credentials['username'];
         $this->password = $credentials['password'];
         if (isset($credentials['hash'])) {
@@ -317,43 +320,43 @@ class OP_Request
             $this->language = $credentials['language'];
         }
     }
-    public function setCommand ($v)
+    public function setCommand (string $v): OP_Request
     {
         $this->cmd = $v;
         return $this;
     }
-    public function getCommand ()
+    public function getCommand (): ?string
     {
         return $this->cmd;
     }
-    public function setLanguage ($v)
+    public function setLanguage (string $v)
     {
         $this->language = $v;
         return $this;
     }
-    public function getLanguage ()
+    public function getLanguage (): ?string
     {
         return $this->language;
     }
-    public function setArgs ($v)
+    public function setArgs (array $v): OP_Request
     {
         $this->args = $v;
         return $this;
     }
-    public function getArgs ()
+    public function getArgs (): ?array
     {
         return $this->args;
     }
-    public function setMisc ($v)
+    public function setMisc (array $v): OP_Request
     {
         $this->misc = $v;
         return $this;
     }
-    public function getMisc ()
+    public function getMisc (): ?array
     {
         return $this->misc;
     }
-    public function setAuth ($args)
+    public function setAuth (array $args): OP_Request
     {
         $this->username = isset($args["username"]) ? $args["username"] : null;
         $this->password = isset($args["password"]) ? $args["password"] : null;
@@ -363,7 +366,7 @@ class OP_Request
         $this->misc = isset($args["misc"]) ? $args["misc"] : null;
         return $this;
     }
-    public function getAuth ()
+    public function getAuth (): array
     {
         return array(
             "username" => $this->username,
@@ -374,14 +377,14 @@ class OP_Request
             "misc" => $this->misc,
         );
     }
-    public function getRaw ()
+    public function getRaw (): string
     {
         if (!$this->raw) {
             $this->raw .= $this->_getRequest();
         }
         return $this->raw;
     }
-    public function _getRequest ()
+    public function _getRequest (): string
     {
         $dom = new DOMDocument('1.0', OP_API::$encoding);
 
@@ -442,22 +445,23 @@ class OP_Request
 }
 class OP_Reply
 {
-    protected $faultCode = 0;
-    protected $faultString = null;
-    protected $value = array();
-    protected $warnings = array();
-    protected $raw = null;
-    protected $dom = null;
-    protected $filters = [];
-    protected $maintenance = null;
+    protected int $faultCode = 0;
+    protected ?string $faultString = null;
+    protected array $value = array();
+    protected array $warnings = array();
+    protected ?string $raw = null;
+    protected ?DOMDocument $dom = null;
+    protected array $filters = [];
+    protected ?bool $maintenance = null;
 
-    public function __construct ($str = null) {
+    public function __construct (?string $str = null)
+    {
         if ($str) {
             $this->raw = $str;
             $this->_parseReply($str);
         }
     }
-    protected function _parseReply ($str = '')
+    protected function _parseReply ($str = ''): void
     {
         $dom = new DOMDocument;
         $result = $dom->loadXML(trim($str));
@@ -482,65 +486,66 @@ class OP_Reply
             $this->maintenance = $arr['reply']['maintenance'];
         }
     }
-    public function encode ($str)
+    public function encode (string $str): string
     {
         return OP_API::encode($str);
     }
-    public function setFaultCode ($v)
+    public function setFaultCode (int $v): OP_Reply
     {
         $this->faultCode = $v;
         return $this;
     }
-    public function setFaultString ($v)
+    public function setFaultString (string $v): OP_Reply
     {
         $this->faultString = $v;
         return $this;
     }
-    public function setValue ($v)
+    public function setValue (array $v): OP_Reply
     {
         $this->value = $v;
         return $this;
     }
-    public function getValue ()
+    public function getValue (): array
     {
         return $this->value;
     }
-    public function setWarnings ($v)
+    public function setWarnings (array $v): OP_Reply
     {
         $this->warnings = $v;
         return $this;
     }
-    public function getDom ()
+    public function getDom (): ?DOMDocument
     {
         return $this->dom;
     }
-    public function getWarnings ()
+    public function getWarnings (): array
     {
         return $this->warnings;
     }
-    public function getMaintenance ()
+    public function getMaintenance (): ?bool
     {
         return $this->maintenance;
     }
-    public function getFaultString () {
+    public function getFaultString (): ?string
+    {
         return $this->faultString;
     }
-    public function getFaultCode ()
+    public function getFaultCode (): int
     {
         return $this->faultCode;
     }
-    public function getRaw ()
+    public function getRaw (): string
     {
         if (!$this->raw) {
             $this->raw .= $this->_getReply ();
         }
         return $this->raw;
     }
-    public function addFilter($filter)
+    public function addFilter(object $filter): void
     {
         $this->filters[] = $filter;
     }
-    public function _getReply ()
+    public function _getReply (): string
     {
         $dom = new DOMDocument('1.0', OP_API::$encoding);
         $rootNode = $dom->appendChild($dom->createElement('openXML'));
