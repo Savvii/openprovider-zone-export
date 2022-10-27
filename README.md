@@ -7,9 +7,9 @@ These are written to `output/zones` as Bind zone files.
 # Requirements
 - An [OpenProvider account](https://cp.openprovider.eu/dashboard/) with domains and DNS records in it.
 - MacOS, FreeBSD or Linux
-- [Composer](https://getcomposer.org/download/) installed
+- [Composer 2.x](https://getcomposer.org/download/) installed
 - Git
-- PHP 8.0 or greater. Can be installed on MacOS using [HomeBrew](https://brew.sh/)
+- PHP 8.0 or greater with the GMP and DOM extension enabled. Can be installed on MacOS using [HomeBrew](https://brew.sh/)
 
 # Install
 ## Clone project & Composer Install
