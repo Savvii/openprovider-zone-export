@@ -447,7 +447,7 @@ class OP_Reply
 {
     protected int $faultCode = 0;
     protected ?string $faultString = null;
-    protected array $value = array();
+    protected ?array $value = array();
     protected array $warnings = array();
     protected ?string $raw = null;
     protected ?DOMDocument $dom = null;
