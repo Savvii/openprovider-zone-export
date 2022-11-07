@@ -233,7 +233,8 @@ class GetAllTool
     {
         if ($value == $domain) {
             // Domain itself
-            $result = '@';
+            // Not using '@' because Plesk can't handle it as target for a CNAME.
+            $result = $domain . '.';
         } elseif (preg_match('/^([\w\-\.\*]+)\.'.preg_quote($domain,'/').'$/', $value, $matches)) {
             // Subdomain
             $result = $matches[1];
