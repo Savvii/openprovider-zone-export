@@ -9,7 +9,7 @@ These are written to `output/zones` as Bind zone files.
 - MacOS, FreeBSD or Linux
 - [Composer 2.x](https://getcomposer.org/download/) installed
 - Git
-- PHP 8.0 or greater with the GMP, DOM and JSON extension enabled. Can be installed on MacOS using [HomeBrew](https://brew.sh/)
+- PHP 8.0 or greater with the GMP and DOM extension enabled. Can be installed on MacOS using [HomeBrew](https://brew.sh/)
 
 # Install
 ## Clone project & Composer Install
