@@ -151,7 +151,7 @@ class OP_API
         }
     }
     // convert DOMNode to array|string|bool|null
-    public static function convertXmlToPhpObj (DOMNode $node): array|string|false|null
+    public static function convertXmlToPhpObj (DOMNode $node): array|string|bool|null
     {
         $ret = array();
 
