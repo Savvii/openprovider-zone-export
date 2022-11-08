@@ -28,7 +28,16 @@ Edit `config.php`
 Optional: Put a manual list of domains in `input/domainlist.txt`, each domain on a separate line.
 
 # Execute
+## Get zones from OpenProvider API
 ```
 ./get_zones.php
 ```
-The zones will be written to `output/zones`.
+The zone files will be written to `output/zones`.
+Custom nameservers will be written to `output/custom_nameservers.json`
+
+## Change nameservers in zone files
+```
+./update_zones.php
+```
+Zone files in `output/zones` will be updated.
+Custom nameservers need to be specified in `config.php`.

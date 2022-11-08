@@ -1,10 +1,17 @@
 <?php
 
 $config = [
+    // get_zones
     'debug'       => false,
     'input_path'  => __DIR__ . '/input',
     'output_path' => __DIR__ . '/output',
     'op_api_url'  => 'https://api.openprovider.eu',
     'op_username' => '___FILL_ME___',
-    'op_password' => '___FILL_ME___'
+    'op_password' => '___FILL_ME___',
+
+    // update_zones
+    'nameservers' => [
+        'ns.provider.ext.',  // don't forget tailing dot
+        'ns2.provider.ext.'  // don't forget tailing dot
+    ]
 ];
