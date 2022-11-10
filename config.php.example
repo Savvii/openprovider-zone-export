@@ -2,12 +2,13 @@
 
 $config = [
     // get_zones
-    'debug'       => false,
-    'input_path'  => __DIR__ . '/input',
-    'output_path' => __DIR__ . '/output',
-    'op_api_url'  => 'https://api.openprovider.eu',
-    'op_username' => '___FILL_ME___',
-    'op_password' => '___FILL_ME___',
+    'debug'         => false,
+    'skip_existing' => true,
+    'input_path'    => __DIR__ . '/input',
+    'output_path'   => __DIR__ . '/output',
+    'op_api_url'    => 'https://api.openprovider.eu',
+    'op_username'   => '___FILL_ME___',
+    'op_password'   => '___FILL_ME___',
 
     // update_zones
     'nameservers' => [

@@ -16,5 +16,13 @@
         "ext-gmp": "*",
         "ext-dom": "*",
         "badcow/dns": "^4.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Savvii\\OpenproviderZoneExport\\": "lib/"
+        },
+        "files": [
+            "lib/API.php"
+        ]
     }
 }
