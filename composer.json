@@ -4,6 +4,7 @@
     "description": "Convert OpenProvider DNS records to Zone files",
     "homepage": "https://github.com/Savvii/openprovider-zone-export",
     "license": "MIT",
+    "minimum-stability": "stable",
     "require": {
         "php": ">=8.0",
         "ext-gmp": "*",
