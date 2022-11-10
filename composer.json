@@ -3,6 +3,12 @@
     "type": "project",
     "description": "Convert OpenProvider DNS records to Zone files",
     "homepage": "https://github.com/Savvii/openprovider-zone-export",
+    "authors": [
+        {
+            "name": "Jeroen Vermeulen",
+            "email": "jeroen@savvii.com"
+        }
+    ],
     "license": "MIT",
     "minimum-stability": "stable",
     "require": {
