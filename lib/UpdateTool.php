@@ -15,9 +15,11 @@ class UpdateTool
     public array $config;
     public string $zoneDir;
 
-    public function __construct()
+    public function __construct(?array $config=null)
     {
-        require_once dirname(__DIR__) . "/config.php";
+        if (is_null($config)) {
+            require_once dirname(__DIR__) . "/config.php";
+        }
         $this->config = $config;
         $this->zoneDir = $this->config['output_path'] . '/zones';
         if (!is_dir($this->zoneDir)) {

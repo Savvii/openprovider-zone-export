@@ -24,5 +24,10 @@
         "files": [
             "lib/API.php"
         ]
+    },
+    "extra": {
+        "branch-alias": {
+            "master": "1.x-dev"
+        }
     }
 }

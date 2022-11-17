@@ -1,14 +1,7 @@
 CHANGELOG for OpenProvider Zone Export
 =================
 
-## 1.0.0
-Initial Release
-### Features:
-* Feature: Retrieve zone files
-* Feature: Retrieve custom nameservers
-* Feature: Update DNS servers in all zone files
-
-## Development
+## 1.x-dev
 ### Features:
 * strict_types
 * Output DNSSEC info JSON
@@ -16,3 +9,10 @@ Initial Release
 ### Other Changes
 * Moved GetAllTool + UpdateTool class to a separate file
 * Added Savvii\OpenproviderZoneExport namespace with PSR-4 autoload
+
+## 1.0.0
+Initial Release
+### Features:
+* Feature: Retrieve zone files
+* Feature: Retrieve custom nameservers
+* Feature: Update DNS servers in all zone files

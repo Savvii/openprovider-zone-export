@@ -20,9 +20,11 @@ class GetAllTool
     public int $internalNsGroupId = 1;
     public AlignedBuilder $builder;
 
-    public function __construct()
+    public function __construct(?array $config=null)
     {
-        require_once dirname(__DIR__) . "/config.php";
+        if (is_null($config)) {
+            require_once dirname(__DIR__) . "/config.php";
+        }
         $this->config = $config;
         $this->api = new OP_API($this->config['op_api_url']);
         $this->api->setDebug($this->config['debug']);
@@ -41,7 +43,7 @@ class GetAllTool
         $dnssecInfo = [];
 
         $domains += $this->getFileDomainList();
-        //        $domains += $this->getApiDomainList();
+        $domains += $this->getApiDomainList();
         $domains = array_unique($domains);
         sort($domains);
 
