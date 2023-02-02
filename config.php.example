@@ -14,5 +14,6 @@ $config = [
     'nameservers' => [
         'ns.provider.ext.',  // don't forget tailing dot
         'ns2.provider.ext.'  // don't forget tailing dot
-    ]
+    ],
+    'new_email' => 'info@provider.ext'
 ];

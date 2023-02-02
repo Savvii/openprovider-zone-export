@@ -59,6 +59,7 @@ class GetAllTool
 
             $domainInfo = $this->getDomainInfo($domain);
             if (is_null($domainInfo)) {
+                // getDomainInfo has already shown error
                 continue;
             }
 
@@ -145,6 +146,13 @@ class GetAllTool
                     $rdata->setWeight(intval($value[0]));
                     $rdata->setPort(intval($value[1]));
                     $rdata->setTarget($this->zoneValue($domain, $value[2]));
+                    break;
+                case 'SOA':
+                    /** @var \Badcow\DNS\Rdata\SOA $rdata */
+                    $rdata->fromText($record['value']);
+                    $value = explode(' ', $record['value']);
+                    $rdata->setMname($this->zoneValue($domain, $value[0]));
+                    $rdata->setRname($this->zoneValue($domain, $value[1]));
                     break;
                 default:
                     $rdata->fromText($record['value']);

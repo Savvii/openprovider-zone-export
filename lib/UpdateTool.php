@@ -9,11 +9,13 @@ use Badcow\DNS\Parser\Parser;
 use Badcow\DNS\AlignedBuilder;
 use Badcow\DNS\ResourceRecord;
 use Badcow\DNS\Rdata\Factory;
+use Exception;
 
 class UpdateTool
 {
     public array $config;
     public string $zoneDir;
+    private string $newRname;
 
     public function __construct(?array $config=null)
     {
@@ -23,11 +25,17 @@ class UpdateTool
         $this->config = $config;
         $this->zoneDir = $this->config['output_path'] . '/zones';
         if (!is_dir($this->zoneDir)) {
-            throw new \Exception(sprintf("ERROR: Zone directory '%s' not found.", $this->zoneDir));
+            throw new Exception(sprintf("ERROR: Zone directory '%s' not found.", $this->zoneDir));
         }
         if (!is_array($this->config['new_nameservers']) || empty($this->config['new_nameservers'])) {
-            throw new \Exception("ERROR: 'new_nameservers' is not a valid array in the config.");
+            throw new Exception("ERROR: 'new_nameservers' is not a valid array in the config.");
         }
+        $rname = $this->config['new_email'];
+        $rname = preg_replace('/[^a-z0-9\-\.]+/', '.', $rname); // replace all strange chars by dot
+        $rname = preg_replace('/\.{1,}/', '.', $rname);         // replace multiple dots by one
+        $rname = trim($rname, '.');
+        $rname = $rname . '.';
+        $this->newRname = $rname;
     }
 
     public function run(): int
@@ -55,6 +63,7 @@ class UpdateTool
                         $rdata = $resourceRec->getRdata();
                         /** @var \Badcow\DNS\Rdata\SOA $rdata */
                         $rdata->setMname(reset($this->config['new_nameservers']));
+                        $rdata->setRname($this->newRname);
                         break;
                 }
             }
