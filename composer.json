@@ -6,7 +6,9 @@
     "authors": [
         {
             "name": "Jeroen Vermeulen",
-            "email": "jeroen@savvii.com"
+            "email": "jeroen@savvii.com",
+            "homepage": "https://www.savvii.com",
+            "role": "Developer"
         }
     ],
     "license": "MIT",
