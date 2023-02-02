@@ -43,7 +43,7 @@ class GetAllTool
         $dnssecInfo = [];
 
         $domains += $this->getFileDomainList();
-        $domains += $this->getApiDomainList();
+// $domains += $this->getApiDomainList();
         $domains = array_unique($domains);
         sort($domains);
 
@@ -152,7 +152,7 @@ class GetAllTool
                     $rdata->fromText($record['value']);
                     $value = explode(' ', $record['value']);
                     $rdata->setMname($this->zoneValue($domain, $value[0]));
-                    $rdata->setRname($this->zoneValue($domain, $value[1]));
+                    $rdata->setRname($this->emailToRname($value[1]));
                     break;
                 default:
                     $rdata->fromText($record['value']);
@@ -325,5 +325,15 @@ class GetAllTool
         }
 
         return $result;
+    }
+
+    public function emailToRname(string $email): string
+    {
+        $rname = $email;
+        $rname = preg_replace('/[^a-z0-9\-\.]+/', '.', $rname); // replace all strange chars by dot
+        $rname = preg_replace('/\.{1,}/', '.', $rname);         // replace multiple dots by one
+        $rname = trim($rname, '.');
+        $rname = $rname . '.';
+        return $rname;
     }
 }

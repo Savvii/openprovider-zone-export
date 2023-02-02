@@ -30,12 +30,7 @@ class UpdateTool
         if (!is_array($this->config['new_nameservers']) || empty($this->config['new_nameservers'])) {
             throw new Exception("ERROR: 'new_nameservers' is not a valid array in the config.");
         }
-        $rname = $this->config['new_email'];
-        $rname = preg_replace('/[^a-z0-9\-\.]+/', '.', $rname); // replace all strange chars by dot
-        $rname = preg_replace('/\.{1,}/', '.', $rname);         // replace multiple dots by one
-        $rname = trim($rname, '.');
-        $rname = $rname . '.';
-        $this->newRname = $rname;
+        $this->newRname = $this->emailToRname($this->config['new_email']);
     }
 
     public function run(): int
@@ -86,5 +81,15 @@ class UpdateTool
         }
         printf("Update %d zone files\n", $count);
         return 0;
+    }
+
+    public function emailToRname(string $email): string
+    {
+        $rname = $email;
+        $rname = preg_replace('/[^a-z0-9\-\.]+/', '.', $rname); // replace all strange chars by dot
+        $rname = preg_replace('/\.{1,}/', '.', $rname);         // replace multiple dots by one
+        $rname = trim($rname, '.');
+        $rname = $rname . '.';
+        return $rname;
     }
 }
