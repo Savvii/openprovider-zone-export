@@ -43,7 +43,7 @@ class GetAllTool
         $dnssecInfo = [];
 
         $domains += $this->getFileDomainList();
-// $domains += $this->getApiDomainList();
+        $domains += $this->getApiDomainList();
         $domains = array_unique($domains);
         sort($domains);
 
