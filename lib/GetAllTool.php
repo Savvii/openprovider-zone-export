@@ -20,6 +20,10 @@ class GetAllTool
     public int $internalNsGroupId = 1;
     public AlignedBuilder $builder;
 
+    /**
+     * Constructor
+     * @param ?array<string|array<string>> $config
+     */
     public function __construct(?array $config=null)
     {
         if (is_null($config)) {
@@ -36,6 +40,10 @@ class GetAllTool
         $this->builder = new AlignedBuilder();
     }
 
+    /**
+     * Execute tool to get all zones
+     * @return int Exitcode, 0 = OK
+     */
     public function run(): int
     {
         $domains = [];
@@ -102,6 +110,12 @@ class GetAllTool
         return 0;
     }
 
+    /**
+     * Convert records from API to a Zone File
+     * @param string $domain
+     * @param array<array<string|int>> $records
+     * @return string
+     */
     public function recordsToZoneFile(string $domain, array $records): string
     {
         $domainDot = sprintf("%s.", $domain);
@@ -170,6 +184,10 @@ class GetAllTool
         return $zoneText;
     }
 
+    /**
+     * Get domain list from file input/domainlist.txt
+     * @return array<string>
+     */
     public function getFileDomainList(): array
     {
         $list = [];
@@ -195,6 +213,11 @@ class GetAllTool
         return $list;
     }
 
+    /**
+     * Get domain list from API
+     * @throws \Exception
+     * @return array<string>
+     */
     public function getApiDomainList(): array
     {
         $result = [];
@@ -248,6 +271,12 @@ class GetAllTool
         return $result;
     }
 
+    /**
+     * Get DnsRecords from API
+     * @param string $domain
+     * @throws \Exception
+     * @return array<array<string>>
+     */
     public function getDnsRecords(string $domain): ?array
     {
         printf("Calling API to requesting DNS records for '%s'\n", $domain);
@@ -274,6 +303,12 @@ class GetAllTool
         return $recordReply->getValue()['results'];
     }
 
+    /**
+     * Get domain information from API
+     * @param string $domain
+     * @throws \Exception
+     * @return array<array<string>>
+     */
     public function getDomainInfo(string $domain): ?array
     {
         printf("Calling API to requesting Domain info for '%s'\n", $domain);
@@ -308,6 +343,13 @@ class GetAllTool
         return $domainReply->getValue();
     }
 
+    /**
+     * Convert a full domain to a short name for use in a DNS zone
+     * @param string $domain
+     * @param string $value
+     * @throws \Exception
+     * @return string
+     */
     private function zoneValue(string $domain, string $value): string
     {
         if ($value == $domain) {
@@ -327,6 +369,11 @@ class GetAllTool
         return $result;
     }
 
+    /**
+     * Convert email to a value for RNAME in SOA
+     * @param string $email
+     * @return string
+     */
     public function emailToRname(string $email): string
     {
         $rname = $email;
