@@ -223,7 +223,7 @@ class GetAllTool
         $result = [];
         $total = null;
         $offset = $this->start;
-        $limit = min(50, $this->stop);
+        $limit = min(100, $this->stop);
 
         while ((is_null($total) or $offset < $total) and $offset < $this->stop) {
             printf("Calling API to get domain list, offset %d limit %d\n", $offset, $limit);
@@ -272,14 +272,76 @@ class GetAllTool
     }
 
     /**
+     * Get zone list from API
+     * @throws \Exception
+     * @return array<string>
+     */
+    public function getApiZoneList(): array
+    {
+        $result = [];
+        $total = null;
+        $offset = $this->start;
+        $limit = min(100, $this->stop);
+
+        while ((is_null($total) or $offset < $total) and $offset < $this->stop) {
+            printf("Calling API to get zone list, offset %d limit %d\n", $offset, $limit);
+            $listRequest = new OP_Request;
+            $listRequest->setAuth([
+                'username' => $this->config['op_username'],
+                'password' => $this->config['op_password']
+            ]);
+            $listRequest->setCommand('searchZoneDnsRequest');
+            $listRequest->setArgs(array(
+                'offset' => $offset,
+                'limit'  => $limit,
+                'orderBy' => 'name',
+            ));
+            $listReply = $this->api->process($listRequest);
+
+            if (0 != $listReply->getFaultCode()) {
+                throw new \Exception(sprintf("ERROR %d: %s", $listReply->getFaultCode(), $listReply->getFaultString()), $listReply->getFaultCode());
+            }
+
+            if ($this->config['debug']) {
+                echo "Value: " . print_r($listReply->getValue(), true) . "\n";
+            }
+
+            $listResults = $listReply->getValue()['results'];
+
+            foreach ($listResults as $listResult) {
+                $domain = $listResult['name'];
+                if (!$listResult['active']) {
+                    printf("Skipping inactive zone '%s'\n", $domain);
+                    continue;
+                }
+
+                if (in_array($domain, $result)) {
+                    printf("WARNING: Duplicate zone from API '%s'\n", $domain);
+                } else {
+                    $result[] = $domain;
+                }
+            }
+
+            $total = $listReply->getValue()['total'];
+            $offset += $limit;
+        }
+        printf("Received %s of %d total zones\n", count($result), $total);
+
+        $apiDomainListFile = $this->config['output_path'] . '/apizonelist.txt';
+        file_put_contents($apiDomainListFile, implode("\n", $result), LOCK_EX);
+
+        return $result;
+    }
+
+    /**
      * Get DnsRecords from API
      * @param string $domain
      * @throws \Exception
-     * @return array<array<string>>
+     * @return array<array<string|array<string>>>
      */
     public function getDnsRecords(string $domain): ?array
     {
-        printf("Calling API to requesting DNS records for '%s'\n", $domain);
+        printf("Calling API to request DNS records for '%s'\n", $domain);
         $recordRequest = new OP_Request;
         $recordRequest->setCommand('searchZoneRecordDnsRequest');
         $recordRequest->setAuth([
@@ -307,7 +369,7 @@ class GetAllTool
      * Get domain information from API
      * @param string $domain
      * @throws \Exception
-     * @return array<array<string>>
+     * @return array<null|string|array<string|array<string>>>
      */
     public function getDomainInfo(string $domain): ?array
     {
