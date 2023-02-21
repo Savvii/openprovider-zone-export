@@ -1,8 +1,9 @@
-/config.php
+/.idea
 /vendor
-/composer.lock
 /output
 /input/*
 !/input/*.example
+/composer.lock
+/config.php
 *~
 .secrets
