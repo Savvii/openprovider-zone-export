@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Savvii\OpenproviderZoneExport;
@@ -24,7 +25,7 @@ class GetAllTool
      * Constructor
      * @param ?array<string|array<string>> $config
      */
-    public function __construct(?array $config=null)
+    public function __construct(?array $config = null)
     {
         if (is_null($config)) {
             require_once dirname(__DIR__) . "/config.php";
@@ -215,8 +216,8 @@ class GetAllTool
 
     /**
      * Get domain list from API
-     * @throws \Exception
      * @return array<string>
+     * @throws \Exception
      */
     public function getApiDomainList(): array
     {
@@ -235,13 +236,16 @@ class GetAllTool
             $listRequest->setCommand('searchDomainRequest');
             $listRequest->setArgs(array(
                 'offset' => $offset,
-                'limit'  => $limit,
+                'limit' => $limit,
                 'orderBy' => 'domainName',
             ));
             $listReply = $this->api->process($listRequest);
 
             if (0 != $listReply->getFaultCode()) {
-                throw new \Exception(sprintf("ERROR %d: %s", $listReply->getFaultCode(), $listReply->getFaultString()), $listReply->getFaultCode());
+                throw new \Exception(
+                    sprintf("ERROR %d: %s", $listReply->getFaultCode(), $listReply->getFaultString()),
+                    $listReply->getFaultCode()
+                );
             }
 
             if ($this->config['debug']) {
@@ -273,10 +277,10 @@ class GetAllTool
 
     /**
      * Get zone list from API
-     * @throws \Exception
      * @return array<string>
+     * @throws \Exception
      */
-    public function getApiZoneList(): array
+    public function getApiZoneList(array $filter = []): array
     {
         $result = [];
         $total = null;
@@ -293,13 +297,16 @@ class GetAllTool
             $listRequest->setCommand('searchZoneDnsRequest');
             $listRequest->setArgs(array(
                 'offset' => $offset,
-                'limit'  => $limit,
+                'limit' => $limit,
                 'orderBy' => 'name',
             ));
             $listReply = $this->api->process($listRequest);
 
             if (0 != $listReply->getFaultCode()) {
-                throw new \Exception(sprintf("ERROR %d: %s", $listReply->getFaultCode(), $listReply->getFaultString()), $listReply->getFaultCode());
+                throw new \Exception(
+                    sprintf("ERROR %d: %s", $listReply->getFaultCode(), $listReply->getFaultString()),
+                    $listReply->getFaultCode()
+                );
             }
 
             if ($this->config['debug']) {
@@ -312,6 +319,11 @@ class GetAllTool
                 $domain = $listResult['name'];
                 if (!$listResult['active']) {
                     printf("Skipping inactive zone '%s'\n", $domain);
+                    continue;
+                }
+
+                if (!empty($filter) && !in_array($domain, $filter)) {
+                    printf("Skipping filtered-out zone '%s'\n", $domain);
                     continue;
                 }
 
@@ -336,8 +348,8 @@ class GetAllTool
     /**
      * Get DnsRecords from API
      * @param string $domain
-     * @throws \Exception
      * @return array<array<string|array<string>>>
+     * @throws \Exception
      */
     public function getDnsRecords(string $domain): ?array
     {
@@ -355,7 +367,10 @@ class GetAllTool
         $recordReply = $this->api->process($recordRequest);
 
         if (0 != $recordReply->getFaultCode()) {
-            throw new \Exception(sprintf("ERROR %d: %s", $recordReply->getFaultCode(), $recordReply->getFaultString()), $recordReply->getFaultCode());
+            throw new \Exception(
+                sprintf("ERROR %d: %s", $recordReply->getFaultCode(), $recordReply->getFaultString()),
+                $recordReply->getFaultCode()
+            );
         }
 
         if ($this->config['debug']) {
@@ -368,8 +383,8 @@ class GetAllTool
     /**
      * Get domain information from API
      * @param string $domain
-     * @throws \Exception
      * @return array<null|string|array<string|array<string>>>
+     * @throws \Exception
      */
     public function getDomainInfo(string $domain): ?array
     {
@@ -395,7 +410,10 @@ class GetAllTool
         }
 
         if (0 != $domainReply->getFaultCode()) {
-            throw new \Exception(sprintf("ERROR %d: %s", $domainReply->getFaultCode(), $domainReply->getFaultString()), $domainReply->getFaultCode());
+            throw new \Exception(
+                sprintf("ERROR %d: %s", $domainReply->getFaultCode(), $domainReply->getFaultString()),
+                $domainReply->getFaultCode()
+            );
         }
 
         if ($this->config['debug']) {
@@ -409,8 +427,8 @@ class GetAllTool
      * Convert a full domain to a short name for use in a DNS zone
      * @param string $domain
      * @param string $value
-     * @throws \Exception
      * @return string
+     * @throws \Exception
      */
     private function zoneValue(string $domain, string $value): string
     {
