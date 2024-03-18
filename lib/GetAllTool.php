@@ -277,10 +277,12 @@ class GetAllTool
 
     /**
      * Get zone list from API
+     * @param array $filter
+     * @param array $exclude
      * @return array<string>
-     * @throws \Exception
+     * @throws \OP_API_Exception
      */
-    public function getApiZoneList(array $filter = []): array
+    public function getApiZoneList(array $filter = [], array $exclude = []): array
     {
         $result = [];
         $total = null;
@@ -327,9 +329,15 @@ class GetAllTool
                     continue;
                 }
 
+                if (!empty($exclude) && in_array($domain, $exclude)) {
+                    printf("Skipping excluded zone '%s'\n", $domain);
+                    continue;
+                }
+
                 if (in_array($domain, $result)) {
                     printf("WARNING: Duplicate zone from API '%s'\n", $domain);
                 } else {
+                    printf("Found domain '%s'\n", $domain);
                     $result[] = $domain;
                 }
             }
